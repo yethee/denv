@@ -134,13 +134,21 @@ if (Install-NeededFor 'PHP' $true) {
     php $installer --install-dir=$composerPath | Out-Null
     
     Install-ChocolateyPath $composerPath
+    Install-ChocolateyPath (Join-Path $env:APPDATA 'Composer\vendor\bin') 
 
     "@ECHO OFF
 php ""%~dp0composer.phar"" %*" | Out-File -Encoding ASCII (Join-Path $composerPath 'composer.bat')
 
     Remove-Item $installer
+
+    if (Install-NeededFor 'PHPUnit' $false) {
+        composer global require "phpunit/phpunit=~4.8"
+        composer global require "phpunit/dbunit=~1.4"
+    }
 }
 
 if (Install-NeededFor 'NodeJS' $true) {
     choco install nodejs.install -y
+
+    npm install gulp -g
 }
