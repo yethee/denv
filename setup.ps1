@@ -72,6 +72,7 @@ Set-GitConfig 'user.name' $null 'Please, enter your name'
 Set-GitConfig 'user.email' $null 'Please, enter your email'
 
 Set-GitConfig 'core.autocrlf' 'input'
+Set-GitConfig 'core.eol' 'lf'
 
 $gitIgnoreFile = '~/.gitignore'
 if (!(Test-Path $gitIgnoreFile)) {
