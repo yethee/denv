@@ -43,7 +43,7 @@ function Set-GitConfig($key, $defaultValue, $prompt) {
 }
 
 if ((Get-Command choco -ErrorAction SilentlyContinue) -eq $null) {
-    iex ((new-object net.webclient).DownloadString('http://chocolatey.org/install.ps1'))
+    iex ((new-object net.webclient).DownloadString('https://chocolatey.org/install.ps1'))
 }
 
 # Import chocolatey's helpers
@@ -102,13 +102,44 @@ if (Install-NeededFor 'PHP' $true) {
 
     $phpPath = Join-Path $(Get-BinRoot) 'php'
     Install-ChocolateyPath $phpPath
-    Update-SessionEnvironment
+
+    $phpIni = Join-Path $phpPath 'php.ini'
+
+    if (!(Test-Path $phpIni)) {
+        Write-Host 'Configuring php...'
+        (Get-Content (Join-Path $phpPath 'php.ini-development')) |
+            ForEach-Object { $_ -Replace ';(date.timezone =)', '$1 Europe\Moscow' } |
+            ForEach-Object { $_ -Replace ';\s*(extension_dir = "ext")', '$1' } |
+            ForEach-Object { $_ -Replace ';(extension=php_curl.dll)', '$1' } |
+            ForEach-Object { $_ -Replace ';(extension=php_gd2.dll)', '$1' } |
+            ForEach-Object { $_ -Replace ';(extension=php_intl.dll)', '$1' } |
+            ForEach-Object { $_ -Replace ';(extension=php_mbstring.dll)', '$1' } |
+            ForEach-Object { $_ -Replace ';(extension=php_openssl.dll)', '$1' } |
+            ForEach-Object { $_ -Replace ';(extension=php_pdo_mysql.dll)', '$1' } |
+            ForEach-Object { $_ -Replace ';(extension=php_pdo_pgsql.dll)', '$1' } |
+            ForEach-Object { $_ -Replace ';(extension=php_pdo_sqlite.dll)', '$1' } |
+            ForEach-Object { $_ -Replace ';(extension=php_soap.dll)', '$1' } |
+            ForEach-Object { $_ -Replace ';(extension=php_sqlite3.dll)', '$1' } |
+            Set-Content $phpIni
+    }
 
     Write-Host "Installing composer..."
-    $composerSetup = Join-Path $installDir composer-setup.exe
-    Invoke-WebRequest https://getcomposer.org/Composer-Setup.exe -OutFile $composerSetup
-    & $composerSetup | Out-Null
-    Remove-Item $composerSetup
+    $composerPath = Join-Path ([Environment]::GetFolderPath('CommonApplicationData')) 'composer'
+    $installer = Join-Path $composerPath 'installer.php'
+
+    if (-not (Test-Path $composerPath)) {
+        New-Item -Path $composerPath -ItemType Directory | Out-Null
+    }
+
+    (New-Object Net.WebClient).DownloadString('https://getcomposer.org/installer') | Out-File -Encoding utf8 $installer
+    php $installer --install-dir=$composerPath | Out-Null
+    
+    Install-ChocolateyPath $composerPath
+
+    "@ECHO OFF
+php ""%~dp0composer.phar"" %*" | Out-File -Encoding ASCII (Join-Path $composerPath 'composer.bat')
+
+    Remove-Item $installer
 }
 
 if (Install-NeededFor 'NodeJS' $true) {
