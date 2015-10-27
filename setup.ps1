@@ -107,7 +107,7 @@ if (Install-NeededFor 'PHP' $true) {
     if (!(Test-Path $phpIni)) {
         Write-Host 'Configuring php...'
         (Get-Content (Join-Path $phpPath 'php.ini-development')) |
-            ForEach-Object { $_ -Replace ';(date.timezone =)', '$1 Europe\Moscow' } |
+            ForEach-Object { $_ -Replace ';(date.timezone =)', '$1 Europe/Moscow' } |
             ForEach-Object { $_ -Replace ';\s*(extension_dir = "ext")', '$1' } |
             ForEach-Object { $_ -Replace ';(extension=php_curl.dll)', '$1' } |
             ForEach-Object { $_ -Replace ';(extension=php_gd2.dll)', '$1' } |
