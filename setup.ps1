@@ -122,6 +122,20 @@ if (Install-NeededFor 'PHP' $true) {
             ForEach-Object { $_ -Replace ';(extension=php_soap.dll)', '$1' } |
             ForEach-Object { $_ -Replace ';(extension=php_sqlite3.dll)', '$1' } |
             Set-Content $phpIni
+
+        $phpVersion = php --version | Select-String "PHP (\d\.\d)" | % { $_.Matches } | % { $_.Groups[1].Value }
+        
+        if ($phpVersion -cge "5.5" -and $phpVersion -cle "5.6") {
+            $url = "http://xdebug.org/files/php_xdebug-2.3.3-" + $phpVersion + "-vc11-nts.dll";
+            
+            if (Get-ProcessorBits 64) {
+                $url = "http://xdebug.org/files/php_xdebug-2.3.3-" + $phpVersion + "-vc11-nts-x86_64.dll";
+            }
+
+            Write-Host 'Install Xdebug...'
+            (New-Object Net.WebClient).DownloadFile($url, (Join-Path $phpPath 'ext\php_xdebug.dll'));
+            Add-Content $phpIni -Value 'zend_extension=php_xdebug.dll'
+        }
     }
 
     Write-Host "Installing composer..."
