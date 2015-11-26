@@ -110,9 +110,11 @@ if (Install-NeededFor 'PHP' $true) {
             ForEach-Object { $_ -Replace ';(date.timezone =)', '$1 Europe/Moscow' } |
             ForEach-Object { $_ -Replace ';\s*(extension_dir = "ext")', '$1' } |
             ForEach-Object { $_ -Replace ';(extension=php_curl.dll)', '$1' } |
+            ForEach-Object { $_ -Replace ';(extension=php_fileinfo.dll)', '$1' } |
             ForEach-Object { $_ -Replace ';(extension=php_gd2.dll)', '$1' } |
             ForEach-Object { $_ -Replace ';(extension=php_intl.dll)', '$1' } |
             ForEach-Object { $_ -Replace ';(extension=php_mbstring.dll)', '$1' } |
+            ForEach-Object { $_ -Replace ';(extension=php_exif.dll)', '$1' } |
             ForEach-Object { $_ -Replace ';(extension=php_openssl.dll)', '$1' } |
             ForEach-Object { $_ -Replace ';(extension=php_pdo_mysql.dll)', '$1' } |
             ForEach-Object { $_ -Replace ';(extension=php_pdo_pgsql.dll)', '$1' } |
