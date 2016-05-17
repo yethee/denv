@@ -92,7 +92,7 @@ if (Install-NeededFor 'posh-git' $true) {
 }
 
 if (Install-NeededFor 'KiTTy' $false) {
-    choco install kitty.portable -y
+    choco install kitty -y
 }
 
 if (Install-NeededFor 'PHP' $true) {
