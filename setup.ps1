@@ -96,7 +96,7 @@ if (Install-NeededFor 'KiTTy' $false) {
 }
 
 if (Install-NeededFor 'PHP' $true) {
-    choco install vcredist2012 -y
+    choco install vcredist2015 -y
     choco install php -y
 
     $phpPath = Join-Path $(Get-BinRoot) 'php'
@@ -123,19 +123,15 @@ if (Install-NeededFor 'PHP' $true) {
             ForEach-Object { $_ -Replace ';(extension=php_sqlite3.dll)', '$1' } |
             Set-Content $phpIni
 
-        $phpVersion = php --version | Select-String "PHP (\d\.\d)" | % { $_.Matches } | % { $_.Groups[1].Value }
-        
-        if ($phpVersion -cge "5.5" -and $phpVersion -cle "5.6") {
-            $url = "http://xdebug.org/files/php_xdebug-2.3.3-" + $phpVersion + "-vc11-nts.dll";
-            
-            if (Get-ProcessorBits 64) {
-                $url = "http://xdebug.org/files/php_xdebug-2.3.3-" + $phpVersion + "-vc11-nts-x86_64.dll";
-            }
+        $xdebugUrl = "https://xdebug.org/files/php_xdebug-2.4.0-7.0-vc14-nts.dll";
 
-            Write-Host 'Install Xdebug...'
-            (New-Object Net.WebClient).DownloadFile($url, (Join-Path $phpPath 'ext\php_xdebug.dll'));
-            Add-Content $phpIni -Value 'zend_extension=php_xdebug.dll'
+        if (Get-ProcessorBits 64) {
+            $xdebugUrl = "https://xdebug.org/files/php_xdebug-2.4.0-7.0-vc14-nts-x86_64.dll";
         }
+        
+        Write-Host 'Install Xdebug...'
+        (New-Object Net.WebClient).DownloadFile($xdebugUrl, (Join-Path $phpPath 'ext\php_xdebug.dll'));
+        Add-Content $phpIni -Value 'zend_extension=php_xdebug.dll'
     }
 
     Write-Host "Installing composer..."
