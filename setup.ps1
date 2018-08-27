@@ -96,8 +96,7 @@ if (Install-NeededFor 'KiTTy' $false) {
 }
 
 if (Install-NeededFor 'PHP' $true) {
-    choco install vcredist2015 -y
-    choco install php -y
+    choco install php -y --version 7.1.21
 
     $phpPath = Join-Path $(Get-BinRoot) 'php'
     Install-ChocolateyPath $phpPath
@@ -123,10 +122,10 @@ if (Install-NeededFor 'PHP' $true) {
             ForEach-Object { $_ -Replace ';(extension=php_sqlite3.dll)', '$1' } |
             Set-Content $phpIni
 
-        $xdebugUrl = "https://xdebug.org/files/php_xdebug-2.4.0-7.0-vc14-nts.dll";
+        $xdebugUrl = "https://xdebug.org/files/php_xdebug-2.6.1-7.1-vc14-nts.dll";
 
         if (Get-ProcessorBits 64) {
-            $xdebugUrl = "https://xdebug.org/files/php_xdebug-2.4.0-7.0-vc14-nts-x86_64.dll";
+            $xdebugUrl = "https://xdebug.org/files/php_xdebug-2.6.1-7.1-vc14-nts-x86_64.dll";
         }
         
         Write-Host 'Install Xdebug...'
@@ -135,32 +134,9 @@ if (Install-NeededFor 'PHP' $true) {
     }
 
     Write-Host "Installing composer..."
-    $composerPath = Join-Path ([Environment]::GetFolderPath('CommonApplicationData')) 'composer'
-    $installer = Join-Path $composerPath 'installer.php'
-
-    if (-not (Test-Path $composerPath)) {
-        New-Item -Path $composerPath -ItemType Directory | Out-Null
-    }
-
-    (New-Object Net.WebClient).DownloadString('https://getcomposer.org/installer') | Out-File -Encoding utf8 $installer
-    php $installer --install-dir=$composerPath | Out-Null
-    
-    Install-ChocolateyPath $composerPath
-    Install-ChocolateyPath (Join-Path $env:APPDATA 'Composer\vendor\bin') 
-
-    "@ECHO OFF
-php ""%~dp0composer.phar"" %*" | Out-File -Encoding ASCII (Join-Path $composerPath 'composer.bat')
-
-    Remove-Item $installer
-
-    if (Install-NeededFor 'PHPUnit' $false) {
-        composer global require "phpunit/phpunit=~4.8"
-        composer global require "phpunit/dbunit=~1.4"
-    }
+    choco install composer -y
 }
 
 if (Install-NeededFor 'NodeJS' $true) {
-    choco install nodejs.install -y
-
-    npm install gulp -g
+    choco install nodejs-lts -y
 }
