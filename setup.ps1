@@ -98,7 +98,7 @@ if (Install-NeededFor 'KiTTy' $false) {
 if (Install-NeededFor 'PHP' $true) {
     choco install php -y --version 7.1.21
 
-    $phpPath = Join-Path $(Get-BinRoot) 'php'
+    $phpPath = Join-Path $(Get-BinRoot) 'php71'
     Install-ChocolateyPath $phpPath
 
     $phpIni = Join-Path $phpPath 'php.ini'
