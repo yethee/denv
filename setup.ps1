@@ -52,6 +52,7 @@ function Install-PHP([string] $version) {
         Write-Host 'Configuring php...'
         (Get-Content (Join-Path $installPath 'php.ini-development')) |
             ForEach-Object { $_ -replace ';(date.timezone =)', '$1 Europe/Moscow' } |
+            ForEach-Object { $_ -replace '^(memory_limit =)(.+)$', '$1 512M' } |
             ForEach-Object { $_ -replace ';\s*(extension_dir = "ext")', '$1' } |
             ForEach-Object { $_ -replace ';(extension=curl)', '$1' } |
             ForEach-Object { $_ -replace ';(extension=fileinfo)', '$1' } |
