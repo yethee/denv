@@ -40,27 +40,135 @@ function Set-GitConfig($key, $defaultValue, $prompt) {
     git config --global $key $value
 }
 
+function Install-PHP([string] $version) {
+    $phpVer = [System.Version]::new($version)
+    $installPath = Join-Path $env:ChocolateyToolsLocation "php$($phpVer.Major)$($phpVer.Minor)"
+
+    choco install php -my --version $version --params="/InstallDir:${installPath}"
+
+    $phpIniFile = Join-Path $installPath 'php.ini'
+    
+    if (-not (Test-Path $phpIniFile)) {
+        Write-Host 'Configuring php...'
+        (Get-Content (Join-Path $installPath 'php.ini-development')) |
+            ForEach-Object { $_ -replace ';(date.timezone =)', '$1 Europe/Moscow' } |
+            ForEach-Object { $_ -replace ';\s*(extension_dir = "ext")', '$1' } |
+            ForEach-Object { $_ -replace ';(extension=curl)', '$1' } |
+            ForEach-Object { $_ -replace ';(extension=fileinfo)', '$1' } |
+            ForEach-Object { $_ -replace ';(extension=gd2)', '$1' } |
+            ForEach-Object { $_ -replace ';(extension=intl)', '$1' } |
+            ForEach-Object { $_ -replace ';(extension=mbstring)', '$1' } |
+            ForEach-Object { $_ -replace ';(extension=exif)', '$1' } |
+            ForEach-Object { $_ -replace ';(extension=openssl)', '$1' } |
+            ForEach-Object { $_ -replace ';(extension=pdo_mysql)', '$1' } |
+            ForEach-Object { $_ -replace ';(extension=pdo_pgsql)', '$1' } |
+            ForEach-Object { $_ -replace ';(extension=pdo_sqlite)', '$1' } |
+            ForEach-Object { $_ -replace ';(extension=soap)', '$1' } |
+            ForEach-Object { $_ -replace ';(extension=sodium)', '$1' } |
+            Set-Content $phpIniFile
+    }
+
+    # Setup curl
+
+    $cacertFile = Join-Path $installPath 'extras/cacert.pem'
+    Invoke-WebRequest -Uri "https://curl.haxx.se/ca/cacert.pem" -OutFile $cacertFile
+    (Get-Content $phpIniFile) -replace ';curl.cainfo =', "curl.cainfo = ${cacertFile}" | Set-Content $phpIniFile
+
+    # Setup xdebug extension
+
+    $extensionFile = (Join-Path $installPath 'ext\php_xdebug.dll')
+    $extensionUrl = "https://xdebug.org/files/php_xdebug-2.9.2-$($phpVer.Major).$($phpVer.Minor)-vc15-nts.dll"
+    if (Get-ProcessorBits 64) {
+        $extensionUrl = "https://xdebug.org/files/php_xdebug-2.9.2-$($phpVer.Major).$($phpVer.Minor)-vc15-nts-x86_64.dll"
+    }
+
+    Write-Host "Download ${extensionUrl} to ${extensionFile}"
+    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+    Invoke-WebRequest -Uri $extensionUrl -OutFile $extensionFile
+
+    Add-LineToFile $phpIniFile 'zend_extension=xdebug'
+
+    # Setup amqp extension
+    if ($phpVer -lt [System.Version]"7.4") {
+        $tmpFile = Download-ExtensionFromPECL "amqp" "1.9.4" $phpVer
+        Install-PECLFromFile $tmpFile "amqp" "${installPath}\ext" $phpIniFile
+        
+        $rmqLibFile = "rabbitmq.4.dll"
+
+        $zip = [System.IO.Compression.ZipFile]::OpenRead($tmpFile)
+        $zip.Entries |
+            Where-Object { $_.FullName -like $rmqLibFile } |
+            ForEach-Object {
+                [System.IO.Compression.ZipFileExtensions]::ExtractToFile($_, "${installPath}\${rmqLibFile}", $true)
+            }
+        $zip.Dispose()
+
+        Remove-Item $tmpFile
+    }
+
+    # Setup ds extension
+    $tmpFile = Download-ExtensionFromPECL "ds" "1.2.9" $phpVer
+    Install-PECLFromFile $tmpFile "ds" "${installPath}\ext" $phpIniFile
+    Remove-Item $tmpFile
+}
+
+function Download-ExtensionFromPECL([string] $extName, [string] $extVersion, [System.Version] $phpVersion) {
+    $tmpFile = New-TemporaryFile
+
+    $extensionUrl = "https://windows.php.net/downloads/pecl/releases/${extName}/${extVersion}/php_${extName}-${extVersion}-$($phpVersion.Major).$($phpVersion.Minor)-nts-vc15-x86.zip"
+    if (Get-ProcessorBits 64) {
+        $extensionUrl = "https://windows.php.net/downloads/pecl/releases/${extName}/${extVersion}/php_${extName}-${extVersion}-$($phpVersion.Major).$($phpVersion.Minor)-nts-vc15-x64.zip"
+    }
+
+    Write-Host "Download ${extensionUrl} to ${tmpFile}"
+    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+    Invoke-WebRequest -Uri $extensionUrl -OutFile $tmpFile
+
+    return $tmpFile
+}
+
+function Install-PECLFromFile([string] $zipFile, [string] $extName, [string] $installPath, [string] $phpIniFile) {
+    Add-Type -AssemblyName System.IO.Compression.FileSystem
+
+    $extensionFile = "php_${extName}.dll"
+
+    $zip = [System.IO.Compression.ZipFile]::OpenRead($zipFile)
+    $zip.Entries |
+        Where-Object { $_.FullName -like $extensionFile } |
+        ForEach-Object {
+            [System.IO.Compression.ZipFileExtensions]::ExtractToFile($_, "${installPath}\${extensionFile}", $true)
+        }
+    $zip.Dispose()
+
+    Add-LineToFile $phpIniFile  "extension=${extName}"
+}
+
+function Add-LineToFile([string] $path, [string] $content) {
+    if (!(Test-Path -LiteralPath $path)) {
+        Write-Warning "No file ${path}"
+        return
+    }
+
+    $match = (@(Get-Content $path -ErrorAction SilentlyContinue) -match $content).Count -gt 0
+
+    if ($match) {
+        return
+    }
+
+    Add-Content $path -Value $content
+}
+
 if (-not $env:ChocolateyInstall -or -not (Test-Path "$env:ChocolateyInstall")) {
     iex ((new-object net.webclient).DownloadString('https://chocolatey.org/install.ps1'))
 }
 
-# Import chocolatey's helpers
-Get-Item $env:ChocolateyInstall\helpers\functions\*.ps1 |
-  ? { -not ($_.Name.Contains(".Tests.")) } |
-    % {
-	  . $_.FullName;
-    }
-
+Import-Module "$env:ChocolateyInstall\helpers\chocolateyInstaller.psm1" -Force
 
 if (Install-NeededFor 'ConEmu' $true) {
     choco install conemu -y
 }
 
-if (Install-NeededFor 'cwRsync' $false) {
-    choco install cwrsync -y
-}
-
-choco install git --params="/GitAndUnixToolsOnPath /NoAutoCrlf" -y
+choco install git -y --params="/GitAndUnixToolsOnPath /NoAutoCrlf"
 
 Update-SessionEnvironment
 
@@ -73,6 +181,10 @@ Set-GitConfig 'user.email' $null 'Please, enter your email'
 
 Set-GitConfig 'core.autocrlf' 'input'
 Set-GitConfig 'core.eol' 'lf'
+
+if (Test-Path env:GIT_SSH) {
+    Set-GitConfig 'core.sshCommand' $env:GIT_SSH
+}
 
 $gitIgnoreFile = '~/.gitignore'
 if (!(Test-Path $gitIgnoreFile)) {
@@ -88,7 +200,8 @@ if (!(Test-Path $gitIgnoreFile)) {
 }
 
 if (Install-NeededFor 'posh-git' $true) {
-    choco install poshgit -y
+    PowerShellGet\Install-Module posh-git -Scope CurrentUser -AllowPrerelease -Force
+    Add-PoshGitToProfile
 }
 
 if (Install-NeededFor 'KiTTy' $false) {
@@ -96,42 +209,8 @@ if (Install-NeededFor 'KiTTy' $false) {
 }
 
 if (Install-NeededFor 'PHP' $true) {
-    choco install php -y --version 7.1.21
-
-    $phpPath = Join-Path $(Get-BinRoot) 'php71'
-    Install-ChocolateyPath $phpPath
-
-    $phpIni = Join-Path $phpPath 'php.ini'
-
-    if (!(Test-Path $phpIni)) {
-        Write-Host 'Configuring php...'
-        (Get-Content (Join-Path $phpPath 'php.ini-development')) |
-            ForEach-Object { $_ -Replace ';(date.timezone =)', '$1 Europe/Moscow' } |
-            ForEach-Object { $_ -Replace ';\s*(extension_dir = "ext")', '$1' } |
-            ForEach-Object { $_ -Replace ';(extension=php_curl.dll)', '$1' } |
-            ForEach-Object { $_ -Replace ';(extension=php_fileinfo.dll)', '$1' } |
-            ForEach-Object { $_ -Replace ';(extension=php_gd2.dll)', '$1' } |
-            ForEach-Object { $_ -Replace ';(extension=php_intl.dll)', '$1' } |
-            ForEach-Object { $_ -Replace ';(extension=php_mbstring.dll)', '$1' } |
-            ForEach-Object { $_ -Replace ';(extension=php_exif.dll)', '$1' } |
-            ForEach-Object { $_ -Replace ';(extension=php_openssl.dll)', '$1' } |
-            ForEach-Object { $_ -Replace ';(extension=php_pdo_mysql.dll)', '$1' } |
-            ForEach-Object { $_ -Replace ';(extension=php_pdo_pgsql.dll)', '$1' } |
-            ForEach-Object { $_ -Replace ';(extension=php_pdo_sqlite.dll)', '$1' } |
-            ForEach-Object { $_ -Replace ';(extension=php_soap.dll)', '$1' } |
-            ForEach-Object { $_ -Replace ';(extension=php_sqlite3.dll)', '$1' } |
-            Set-Content $phpIni
-
-        $xdebugUrl = "https://xdebug.org/files/php_xdebug-2.6.1-7.1-vc14-nts.dll";
-
-        if (Get-ProcessorBits 64) {
-            $xdebugUrl = "https://xdebug.org/files/php_xdebug-2.6.1-7.1-vc14-nts-x86_64.dll";
-        }
-        
-        Write-Host 'Install Xdebug...'
-        (New-Object Net.WebClient).DownloadFile($xdebugUrl, (Join-Path $phpPath 'ext\php_xdebug.dll'));
-        Add-Content $phpIni -Value 'zend_extension=php_xdebug.dll'
-    }
+    Install-PHP "7.3.15"
+    Install-PHP "7.4.3"
 
     Write-Host "Installing composer..."
     choco install composer -y
@@ -140,3 +219,4 @@ if (Install-NeededFor 'PHP' $true) {
 if (Install-NeededFor 'NodeJS' $true) {
     choco install nodejs-lts -y
 }
+

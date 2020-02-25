@@ -5,7 +5,6 @@ Set up a web development environment on Windows.
 Included tools:
 
  - [ConEmu](https://chocolatey.org/packages/ConEmu)
- - [cwRsync](https://chocolatey.org/packages/cwrsync)
  - [GIT](https://chocolatey.org/packages/git)
  - [posh-git](https://chocolatey.org/packages/poshgit)
  - [KiTTy](https://chocolatey.org/packages/kitty.portable)
@@ -15,7 +14,7 @@ Included tools:
 
 ## Requirements
 
- - PowerShell 2.0 or higher
+ - PowerShell 5.0 or higher
 
 ## Installation
 
