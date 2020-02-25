@@ -64,6 +64,7 @@ function Install-PHP([string] $version) {
             ForEach-Object { $_ -replace ';(extension=pdo_pgsql)', '$1' } |
             ForEach-Object { $_ -replace ';(extension=pdo_sqlite)', '$1' } |
             ForEach-Object { $_ -replace ';(extension=soap)', '$1' } |
+            ForEach-Object { $_ -replace ';(extension=sockets)', '$1' } |
             ForEach-Object { $_ -replace ';(extension=sodium)', '$1' } |
             Set-Content $phpIniFile
     }
