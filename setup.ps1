@@ -73,6 +73,7 @@ function Install-PHP([string] $version) {
     # Setup curl
 
     $cacertFile = Join-Path $installPath 'extras/cacert.pem'
+    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
     Invoke-WebRequest -Uri "https://curl.haxx.se/ca/cacert.pem" -OutFile $cacertFile
     (Get-Content $phpIniFile) -replace ';curl.cainfo =', "curl.cainfo = ${cacertFile}" | Set-Content $phpIniFile
 
