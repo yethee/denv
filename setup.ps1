@@ -49,27 +49,28 @@ function Install-PHP([string] $version) {
     $phpIniFile = Join-Path $installPath 'php.ini'
 
     if (-not (Test-Path $phpIniFile)) {
-        Write-Host 'Configuring php...'
-        (Get-Content (Join-Path $installPath 'php.ini-development')) |
-            ForEach-Object { $_ -replace ';(date.timezone =)', '$1 Europe/Moscow' } |
-            ForEach-Object { $_ -replace '^(memory_limit =)(.+)$', '$1 512M' } |
-            ForEach-Object { $_ -replace ';\s*(extension_dir = "ext")', '$1' } |
-            ForEach-Object { $_ -replace ';(extension=curl)', '$1' } |
-            ForEach-Object { $_ -replace ';(extension=fileinfo)', '$1' } |
-            ForEach-Object { $_ -replace ';(extension=gd2)', '$1' } |
-            ForEach-Object { $_ -replace ';(extension=intl)', '$1' } |
-            ForEach-Object { $_ -replace ';(extension=mbstring)', '$1' } |
-            ForEach-Object { $_ -replace ';(extension=exif)', '$1' } |
-            ForEach-Object { $_ -replace ';(extension=openssl)', '$1' } |
-            ForEach-Object { $_ -replace ';(extension=pdo_mysql)', '$1' } |
-            ForEach-Object { $_ -replace ';(extension=pdo_pgsql)', '$1' } |
-            ForEach-Object { $_ -replace ';(extension=pdo_sqlite)', '$1' } |
-            ForEach-Object { $_ -replace ';(extension=soap)', '$1' } |
-            ForEach-Object { $_ -replace ';(extension=sockets)', '$1' } |
-            ForEach-Object { $_ -replace ';(extension=sodium)', '$1' } |
-            ForEach-Object { $_ -replace ';(extension=xsl)', '$1' } |
-            Set-Content $phpIniFile
+         Copy-Item (Join-Path $installPath 'php.ini-development') -Destination $phpIniFile
     }
+
+    (Get-Content (Join-Path $installPath 'php.ini-development')) |
+        ForEach-Object { $_ -replace ';(date.timezone =)', '$1 Europe/Moscow' } |
+        ForEach-Object { $_ -replace '^(memory_limit =)(.+)$', '$1 512M' } |
+        ForEach-Object { $_ -replace ';\s*(extension_dir = "ext")', '$1' } |
+        ForEach-Object { $_ -replace ';(extension=curl)', '$1' } |
+        ForEach-Object { $_ -replace ';(extension=fileinfo)', '$1' } |
+        ForEach-Object { $_ -replace ';(extension=gd2)', '$1' } |
+        ForEach-Object { $_ -replace ';(extension=intl)', '$1' } |
+        ForEach-Object { $_ -replace ';(extension=mbstring)', '$1' } |
+        ForEach-Object { $_ -replace ';(extension=exif)', '$1' } |
+        ForEach-Object { $_ -replace ';(extension=openssl)', '$1' } |
+        ForEach-Object { $_ -replace ';(extension=pdo_mysql)', '$1' } |
+        ForEach-Object { $_ -replace ';(extension=pdo_pgsql)', '$1' } |
+        ForEach-Object { $_ -replace ';(extension=pdo_sqlite)', '$1' } |
+        ForEach-Object { $_ -replace ';(extension=soap)', '$1' } |
+        ForEach-Object { $_ -replace ';(extension=sockets)', '$1' } |
+        ForEach-Object { $_ -replace ';(extension=sodium)', '$1' } |
+        ForEach-Object { $_ -replace ';(extension=xsl)', '$1' } |
+        Set-Content $phpIniFile
 
     # Setup curl
 
