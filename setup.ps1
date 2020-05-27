@@ -82,9 +82,9 @@ function Install-PHP([string] $version) {
     # Setup xdebug extension
 
     $extensionFile = (Join-Path $installPath 'ext\php_xdebug.dll')
-    $extensionUrl = "https://xdebug.org/files/php_xdebug-2.9.2-$($phpVer.Major).$($phpVer.Minor)-vc15-nts.dll"
+    $extensionUrl = "https://xdebug.org/files/php_xdebug-2.9.5-$($phpVer.Major).$($phpVer.Minor)-vc15-nts.dll"
     if (Get-ProcessorBits 64) {
-        $extensionUrl = "https://xdebug.org/files/php_xdebug-2.9.2-$($phpVer.Major).$($phpVer.Minor)-vc15-nts-x86_64.dll"
+        $extensionUrl = "https://xdebug.org/files/php_xdebug-2.9.5-$($phpVer.Major).$($phpVer.Minor)-vc15-nts-x86_64.dll"
     }
 
     Write-Host "Download ${extensionUrl} to ${extensionFile}"
@@ -95,7 +95,7 @@ function Install-PHP([string] $version) {
 
     # Setup amqp extension
     if ($phpVer -lt [System.Version]"7.4") {
-        $tmpFile = Download-ExtensionFromPECL "amqp" "1.9.4" $phpVer
+        $tmpFile = Download-ExtensionFromPECL "amqp" "1.10.2" $phpVer
         Install-PECLFromFile $tmpFile "amqp" "${installPath}\ext" $phpIniFile
 
         $rmqLibFile = "rabbitmq.4.dll"
@@ -214,8 +214,8 @@ if (Install-NeededFor 'KiTTy' $false) {
 }
 
 if (Install-NeededFor 'PHP' $true) {
-    Install-PHP "7.3.15"
-    Install-PHP "7.4.3"
+    Install-PHP "7.3.18"
+    Install-PHP "7.4.5"
 
     Write-Host "Installing composer..."
     choco install composer -y
