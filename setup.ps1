@@ -31,7 +31,7 @@ function Set-GitConfig($key, $defaultValue, $prompt) {
         if ($prompt) {
             $value = Read-Host $prompt
         }
-        
+
         if (!$value -and $defaultValue) {
             $value = $defaultValue
         }
@@ -47,7 +47,7 @@ function Install-PHP([string] $version) {
     choco install php -my --version $version --params="/InstallDir:${installPath}"
 
     $phpIniFile = Join-Path $installPath 'php.ini'
-    
+
     if (-not (Test-Path $phpIniFile)) {
         Write-Host 'Configuring php...'
         (Get-Content (Join-Path $installPath 'php.ini-development')) |
@@ -67,6 +67,7 @@ function Install-PHP([string] $version) {
             ForEach-Object { $_ -replace ';(extension=soap)', '$1' } |
             ForEach-Object { $_ -replace ';(extension=sockets)', '$1' } |
             ForEach-Object { $_ -replace ';(extension=sodium)', '$1' } |
+            ForEach-Object { $_ -replace ';(extension=xsl)', '$1' } |
             Set-Content $phpIniFile
     }
 
@@ -95,7 +96,7 @@ function Install-PHP([string] $version) {
     if ($phpVer -lt [System.Version]"7.4") {
         $tmpFile = Download-ExtensionFromPECL "amqp" "1.9.4" $phpVer
         Install-PECLFromFile $tmpFile "amqp" "${installPath}\ext" $phpIniFile
-        
+
         $rmqLibFile = "rabbitmq.4.dll"
 
         $zip = [System.IO.Compression.ZipFile]::OpenRead($tmpFile)
