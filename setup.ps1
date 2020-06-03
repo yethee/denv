@@ -44,7 +44,7 @@ function Install-PHP([string] $version) {
     $phpVer = [System.Version]::new($version)
     $installPath = Join-Path $env:ChocolateyToolsLocation "php$($phpVer.Major)$($phpVer.Minor)"
 
-    choco install php -my --version $version --params="/InstallDir:${installPath}"
+    choco install php -my --version $version --params "/InstallDir:${installPath}"
 
     $phpIniFile = Join-Path $installPath 'php.ini'
 
@@ -148,15 +148,17 @@ function Install-PECLFromFile([string] $zipFile, [string] $extName, [string] $in
     Add-LineToFile $phpIniFile  "extension=${extName}"
 }
 
-function Add-LineToFile([string] $path, [string] $content) {
+function Test-ContentInFile([string] $path, [string] $content) {
     if (!(Test-Path -LiteralPath $path)) {
-        Write-Warning "No file ${path}"
-        return
+        return $false
     }
 
     $match = (@(Get-Content $path -ErrorAction SilentlyContinue) -match $content).Count -gt 0
+    return $match
+}
 
-    if ($match) {
+function Add-LineToFile([string] $path, [string] $content) {
+    if (Test-ContentInFile $path $content) {
         return
     }
 
@@ -225,3 +227,29 @@ if (Install-NeededFor 'NodeJS' $true) {
     choco install nodejs-lts -y
 }
 
+if (Install-NeededFor 'Python' $true) {
+    $installPath = Join-Path $env:ChocolateyToolsLocation "python38"
+
+    choco install python3 -y --version 3.8.3 --params "/InstallDir:${installPath}"
+    python -m pip install --upgrade pip
+    refreshenv
+    pip install pipenv
+
+    $profilePath = $PROFILE.CurrentUserCurrentHost
+    Write-Verbose "`$profilePath = '$profilePath'"
+
+    if (!(Test-ContentInFile $profilePath '\$env:PIPENV_VENV_IN_PROJECT=')) {
+        Add-Content -LiteralPath $profilePath -Value "`n`$env:PIPENV_VENV_IN_PROJECT=1" -Encoding UTF8
+    }
+
+    if (!(Test-ContentInFile $profilePath 'if \(\$env:PIPENV_ACTIVE -eq "1"\) {')) {
+        $profileContent = @"
+
+if (`$env:PIPENV_ACTIVE -eq `"1`") {
+  `$GitPromptSettings.DefaultPromptPrefix.Text = `"(pipenv) `"
+  `$GitPromptSettings.DefaultPromptPrefix.ForegroundColor = [ConsoleColor]::Blue
+}
+"@
+        Add-Content -LiteralPath $profilePath -Value $profileContent -Encoding UTF8
+    }
+}
