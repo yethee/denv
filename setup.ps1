@@ -82,9 +82,9 @@ function Install-PHP([string] $version) {
     # Setup xdebug extension
 
     $extensionFile = (Join-Path $installPath 'ext\php_xdebug.dll')
-    $extensionUrl = "https://xdebug.org/files/php_xdebug-2.9.5-$($phpVer.Major).$($phpVer.Minor)-vc15-nts.dll"
+    $extensionUrl = "https://xdebug.org/files/php_xdebug-2.9.6-$($phpVer.Major).$($phpVer.Minor)-vc15-nts.dll"
     if (Get-ProcessorBits 64) {
-        $extensionUrl = "https://xdebug.org/files/php_xdebug-2.9.5-$($phpVer.Major).$($phpVer.Minor)-vc15-nts-x86_64.dll"
+        $extensionUrl = "https://xdebug.org/files/php_xdebug-2.9.6-$($phpVer.Major).$($phpVer.Minor)-vc15-nts-x86_64.dll"
     }
 
     Write-Host "Download ${extensionUrl} to ${extensionFile}"
@@ -216,8 +216,8 @@ if (Install-NeededFor 'KiTTy' $false) {
 }
 
 if (Install-NeededFor 'PHP' $true) {
-    Install-PHP "7.3.18"
-    Install-PHP "7.4.5"
+    Install-PHP "7.3.20"
+    Install-PHP "7.4.7"
 
     Write-Host "Installing composer..."
     choco install composer -y
@@ -230,7 +230,7 @@ if (Install-NeededFor 'NodeJS' $true) {
 if (Install-NeededFor 'Python' $true) {
     $installPath = Join-Path $env:ChocolateyToolsLocation "python38"
 
-    choco install python3 -y --version 3.8.3 --params "/InstallDir:${installPath}"
+    choco install python3 -y --version 3.8.5 --params "/InstallDir:${installPath}"
     python -m pip install --upgrade pip
     refreshenv
     pip install pipenv
