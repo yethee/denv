@@ -230,7 +230,7 @@ if (Install-NeededFor 'NodeJS' $true) {
 if (Install-NeededFor 'Python' $true) {
     $installPath = Join-Path $env:ChocolateyToolsLocation "python38"
 
-    choco install python3 -y --version 3.8.5 --params "/InstallDir:${installPath}"
+    choco install python3 -y --version 3.8.5.20200721 --params "/InstallDir:${installPath}"
     python -m pip install --upgrade pip
     refreshenv
     pip install pipenv
