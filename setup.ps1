@@ -235,7 +235,7 @@ if (Install-NeededFor 'Python' $true) {
 
     choco install python3 -y --version 3.8.5.20200721 --params "/InstallDir:${installPath}"
     python -m pip install --upgrade pip
-    refreshenv
+    Update-SessionEnvironment
     pip install pipenv
 
     $profilePath = $PROFILE.CurrentUserCurrentHost
