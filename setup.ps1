@@ -175,6 +175,7 @@ if (Install-NeededFor 'ConEmu' $false) {
     choco install conemu -y
 }
 
+choco install openssh -y --pre -params '"/SSHAgentFeature"'
 choco install git -y --params="/GitAndUnixToolsOnPath /NoAutoCrlf"
 
 Update-SessionEnvironment
@@ -189,8 +190,10 @@ Set-GitConfig 'user.email' $null 'Please, enter your email'
 Set-GitConfig 'core.autocrlf' 'input'
 Set-GitConfig 'core.eol' 'lf'
 
-if (Test-Path env:GIT_SSH) {
-    Set-GitConfig 'core.sshCommand' $env:GIT_SSH
+$sshPath = (Get-Command ssh -ErrorAction SilentlyContinue).Path
+
+if (Test-Path $sshPath) {
+    Set-GitConfig 'core.sshCommand' "'${sshPath}'"
 }
 
 $gitIgnoreFile = '~/.gitignore'
