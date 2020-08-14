@@ -171,7 +171,7 @@ if (-not $env:ChocolateyInstall -or -not (Test-Path "$env:ChocolateyInstall")) {
 
 Import-Module "$env:ChocolateyInstall\helpers\chocolateyInstaller.psm1" -Force
 
-if (Install-NeededFor 'ConEmu' $true) {
+if (Install-NeededFor 'ConEmu' $false) {
     choco install conemu -y
 }
 
