@@ -219,8 +219,8 @@ if (Install-NeededFor 'KiTTy' $false) {
 }
 
 if (Install-NeededFor 'PHP' $true) {
-    Install-PHP "7.3.20"
-    Install-PHP "7.4.7"
+    Install-PHP "7.3.21"
+    Install-PHP "7.4.9"
 
     Write-Host "Installing composer..."
     choco install composer -y
