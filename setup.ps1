@@ -82,9 +82,9 @@ function Install-PHP([string] $version) {
     # Setup xdebug extension
 
     $extensionFile = (Join-Path $installPath 'ext\php_xdebug.dll')
-    $extensionUrl = "https://xdebug.org/files/php_xdebug-2.9.6-$($phpVer.Major).$($phpVer.Minor)-vc15-nts.dll"
+    $extensionUrl = "https://xdebug.org/files/php_xdebug-2.9.8-$($phpVer.Major).$($phpVer.Minor)-vc15-nts.dll"
     if (Get-ProcessorBits 64) {
-        $extensionUrl = "https://xdebug.org/files/php_xdebug-2.9.6-$($phpVer.Major).$($phpVer.Minor)-vc15-nts-x86_64.dll"
+        $extensionUrl = "https://xdebug.org/files/php_xdebug-2.9.8-$($phpVer.Major).$($phpVer.Minor)-vc15-nts-x86_64.dll"
     }
 
     Write-Host "Download ${extensionUrl} to ${extensionFile}"
@@ -112,7 +112,7 @@ function Install-PHP([string] $version) {
     }
 
     # Setup ds extension
-    $tmpFile = Download-ExtensionFromPECL "ds" "1.2.9" $phpVer
+    $tmpFile = Download-ExtensionFromPECL "ds" "1.3.0" $phpVer
     Install-PECLFromFile $tmpFile "ds" "${installPath}\ext" $phpIniFile
     Remove-Item $tmpFile
 }
@@ -219,8 +219,8 @@ if (Install-NeededFor 'KiTTy' $false) {
 }
 
 if (Install-NeededFor 'PHP' $true) {
-    Install-PHP "7.3.21"
-    Install-PHP "7.4.9"
+    Install-PHP "7.3.24"
+    Install-PHP "7.4.11"
 
     Write-Host "Installing composer..."
     choco install composer -y
@@ -233,7 +233,7 @@ if (Install-NeededFor 'NodeJS' $true) {
 if (Install-NeededFor 'Python' $true) {
     $installPath = Join-Path $env:ChocolateyToolsLocation "python38"
 
-    choco install python3 -y --version 3.8.5.20200721 --params "/InstallDir:${installPath}"
+    choco install python3 -y --version 3.8.6 --params "/InstallDir:${installPath}"
     python -m pip install --upgrade pip
     Update-SessionEnvironment
     pip install pipenv
