@@ -79,7 +79,7 @@ function Install-PHP([string] $version) {
     Invoke-WebRequest -Uri "https://curl.haxx.se/ca/cacert.pem" -OutFile $cacertFile
     (Get-Content $phpIniFile) -replace ';curl.cainfo =', "curl.cainfo = ${cacertFile}" | Set-Content $phpIniFile
 
-    # Setup xdebug extension
+    # Install xdebug extension
 
     $extensionFile = (Join-Path $installPath 'ext\php_xdebug.dll')
     $extensionUrl = "https://xdebug.org/files/php_xdebug-2.9.8-$($phpVer.Major).$($phpVer.Minor)-vc15-nts.dll"
@@ -93,7 +93,7 @@ function Install-PHP([string] $version) {
 
     Add-LineToFile $phpIniFile 'zend_extension=xdebug'
 
-    # Setup amqp extension
+    # Install amqp extension
     if ($phpVer -lt [System.Version]"7.4") {
         $tmpFile = Download-ExtensionFromPECL "amqp" "1.10.2" $phpVer
         Install-PECLFromFile $tmpFile "amqp" "${installPath}\ext" $phpIniFile
@@ -111,9 +111,14 @@ function Install-PHP([string] $version) {
         Remove-Item $tmpFile
     }
 
-    # Setup ds extension
+    # Install ds extension
     $tmpFile = Download-ExtensionFromPECL "ds" "1.3.0" $phpVer
     Install-PECLFromFile $tmpFile "ds" "${installPath}\ext" $phpIniFile
+    Remove-Item $tmpFile
+
+    # Install pdo_sqlsrv extension
+    $tmpFile = Download-ExtensionFromPECL "pdo_sqlsrv" "5.8.1" $phpVer
+    Install-PECLFromFile $tmpFile "pdo_sqlsrv" "${installPath}\ext" $phpIniFile
     Remove-Item $tmpFile
 }
 
