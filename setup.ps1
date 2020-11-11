@@ -224,6 +224,8 @@ if (Install-NeededFor 'KiTTy' $false) {
 }
 
 if (Install-NeededFor 'PHP' $true) {
+    choco install sqlserver-odbcdriver -y
+
     Install-PHP "7.3.24"
     Install-PHP "7.4.11"
 
