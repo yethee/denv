@@ -82,9 +82,9 @@ function Install-PHP([string] $version) {
     # Install xdebug extension
 
     $extensionFile = (Join-Path $installPath 'ext\php_xdebug.dll')
-    $extensionUrl = "https://xdebug.org/files/php_xdebug-2.9.8-$($phpVer.Major).$($phpVer.Minor)-vc15-nts.dll"
+    $extensionUrl = "https://xdebug.org/files/php_xdebug-3.0.1-$($phpVer.Major).$($phpVer.Minor)-vc15-nts.dll"
     if (Get-ProcessorBits 64) {
-        $extensionUrl = "https://xdebug.org/files/php_xdebug-2.9.8-$($phpVer.Major).$($phpVer.Minor)-vc15-nts-x86_64.dll"
+        $extensionUrl = "https://xdebug.org/files/php_xdebug-3.0.1-$($phpVer.Major).$($phpVer.Minor)-vc15-nts-x86_64.dll"
     }
 
     Write-Host "Download ${extensionUrl} to ${extensionFile}"
