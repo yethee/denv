@@ -90,9 +90,9 @@ function Install-PHP {
     # Install xdebug extension
 
     $extensionFile = (Join-Path $installPath 'ext\php_xdebug.dll')
-    $extensionUrl = "https://xdebug.org/files/php_xdebug-3.0.1-$($phpVer.Major).$($phpVer.Minor)-vc15-nts.dll"
+    $extensionUrl = "https://xdebug.org/files/php_xdebug-3.0.4-$($phpVer.Major).$($phpVer.Minor)-vc15-nts.dll"
     if (Get-ProcessorBits 64) {
-        $extensionUrl = "https://xdebug.org/files/php_xdebug-3.0.1-$($phpVer.Major).$($phpVer.Minor)-vc15-nts-x86_64.dll"
+        $extensionUrl = "https://xdebug.org/files/php_xdebug-3.0.4-$($phpVer.Major).$($phpVer.Minor)-vc15-nts-x86_64.dll"
     }
 
     Write-Host "Download ${extensionUrl} to ${extensionFile}"
@@ -102,22 +102,20 @@ function Install-PHP {
     Add-LineToFile $phpIniFile 'zend_extension=xdebug'
 
     # Install amqp extension
-    if ($phpVer -lt [System.Version]"8.0") {
-        $tmpFile = Download-ExtensionFromPECL "amqp" "1.10.2" $phpVer
-        Install-PECLFromFile $tmpFile "amqp" "${installPath}\ext" $phpIniFile
+    $tmpFile = Download-ExtensionFromPECL "amqp" "1.11.0beta" $phpVer
+    Install-PECLFromFile $tmpFile "amqp" "${installPath}\ext" $phpIniFile
 
-        $rmqLibFile = "rabbitmq.4.dll"
+    $rmqLibFile = "rabbitmq.4.dll"
 
-        $zip = [System.IO.Compression.ZipFile]::OpenRead($tmpFile)
-        $zip.Entries |
-            Where-Object { $_.FullName -like $rmqLibFile } |
-            ForEach-Object {
-                [System.IO.Compression.ZipFileExtensions]::ExtractToFile($_, "${installPath}\${rmqLibFile}", $true)
-            }
-        $zip.Dispose()
+    $zip = [System.IO.Compression.ZipFile]::OpenRead($tmpFile)
+    $zip.Entries |
+        Where-Object { $_.FullName -like $rmqLibFile } |
+        ForEach-Object {
+            [System.IO.Compression.ZipFileExtensions]::ExtractToFile($_, "${installPath}\${rmqLibFile}", $true)
+        }
+    $zip.Dispose()
 
-        Remove-Item $tmpFile
-    }
+    Remove-Item $tmpFile
 
     # Install ds extension
     $tmpFile = Download-ExtensionFromPECL "ds" "1.3.0" $phpVer
@@ -125,7 +123,7 @@ function Install-PHP {
     Remove-Item $tmpFile
 
     # Install pdo_sqlsrv extension
-    $tmpFile = Download-ExtensionFromPECL "pdo_sqlsrv" "5.8.1" $phpVer
+    $tmpFile = Download-ExtensionFromPECL "pdo_sqlsrv" "5.9.0" $phpVer
     Install-PECLFromFile $tmpFile "pdo_sqlsrv" "${installPath}\ext" $phpIniFile
     Remove-Item $tmpFile
 }
@@ -254,8 +252,8 @@ if (Install-NeededFor 'KiTTy' -DefaultAnswer $false) {
 if (Install-NeededFor 'PHP' -DefaultAnswer $true) {
     choco install sqlserver-odbcdriver -y
 
-    Install-PHP -Version "7.3.25"
-    Install-PHP -Version "7.4.13"
+    Install-PHP -Version "7.3.29"
+    Install-PHP -Version "7.4.22"
 
     Write-Host "Installing composer..."
     choco install composer -y
@@ -268,7 +266,7 @@ if (Install-NeededFor 'NodeJS' -DefaultAnswer $true) {
 if (Install-NeededFor 'Python' -DefaultAnswer $true) {
     $installPath = Join-Path $env:ChocolateyToolsLocation "python38"
 
-    choco install python3 -y --version 3.8.6 --params "/InstallDir:${installPath}"
+    choco install python3 -y --version 3.8.10 --params "/InstallDir:${installPath}"
     python -m pip install --upgrade pip
     Update-SessionEnvironment
     pip install pipenv
