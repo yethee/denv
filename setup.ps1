@@ -90,10 +90,15 @@ function Install-PHP {
     # Install xdebug extension
 
     $extensionFile = (Join-Path $installPath 'ext\php_xdebug.dll')
-    $extensionUrl = "https://xdebug.org/files/php_xdebug-3.0.4-$($phpVer.Major).$($phpVer.Minor)-vc15-nts.dll"
-    if (Get-ProcessorBits 64) {
-        $extensionUrl = "https://xdebug.org/files/php_xdebug-3.0.4-$($phpVer.Major).$($phpVer.Minor)-vc15-nts-x86_64.dll"
+    $vc = "vc15"
+    $archPart = ""
+    if ($phpVer -ge [System.Version]"8.0") {
+        $vc = "vs16"
     }
+    if (Get-ProcessorBits 64) {
+        $archPart = "-x86_64"
+    }
+    $extensionUrl = "https://xdebug.org/files/php_xdebug-3.0.4-$($phpVer.Major).$($phpVer.Minor)-${vc}-nts${archPart}.dll"
 
     Write-Host "Download ${extensionUrl} to ${extensionFile}"
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
@@ -102,25 +107,28 @@ function Install-PHP {
     Add-LineToFile $phpIniFile 'zend_extension=xdebug'
 
     # Install amqp extension
-    $tmpFile = Download-ExtensionFromPECL "amqp" "1.11.0beta" $phpVer
-    Install-PECLFromFile $tmpFile "amqp" "${installPath}\ext" $phpIniFile
+    if ($phpVer -lt [System.Version]"8.0") {
+        $tmpFile = Download-ExtensionFromPECL "amqp" "1.11.0beta" $phpVer
+        Install-PECLFromFile $tmpFile "amqp" "${installPath}\ext" $phpIniFile
 
-    $rmqLibFile = "rabbitmq.4.dll"
+        $rmqLibFile = "rabbitmq.4.dll"
 
-    $zip = [System.IO.Compression.ZipFile]::OpenRead($tmpFile)
-    $zip.Entries |
-        Where-Object { $_.FullName -like $rmqLibFile } |
-        ForEach-Object {
-            [System.IO.Compression.ZipFileExtensions]::ExtractToFile($_, "${installPath}\${rmqLibFile}", $true)
-        }
-    $zip.Dispose()
-
-    Remove-Item $tmpFile
+        $zip = [System.IO.Compression.ZipFile]::OpenRead($tmpFile)
+        $zip.Entries |
+                Where-Object { $_.FullName -like $rmqLibFile } |
+                ForEach-Object {
+                    [System.IO.Compression.ZipFileExtensions]::ExtractToFile($_, "${installPath}\${rmqLibFile}", $true)
+                }
+        $zip.Dispose()
+        Remove-Item $tmpFile
+    }
 
     # Install ds extension
-    $tmpFile = Download-ExtensionFromPECL "ds" "1.3.0" $phpVer
-    Install-PECLFromFile $tmpFile "ds" "${installPath}\ext" $phpIniFile
-    Remove-Item $tmpFile
+    if ($phpVer -lt [System.Version]"8.0") {
+        $tmpFile = Download-ExtensionFromPECL "ds" "1.3.0" $phpVer
+        Install-PECLFromFile $tmpFile "ds" "${installPath}\ext" $phpIniFile
+        Remove-Item $tmpFile
+    }
 
     # Install pdo_sqlsrv extension
     $tmpFile = Download-ExtensionFromPECL "pdo_sqlsrv" "5.9.0" $phpVer
@@ -137,10 +145,18 @@ function Download-ExtensionFromPECL {
 
     $tmpFile = New-TemporaryFile
 
-    $extensionUrl = "https://windows.php.net/downloads/pecl/releases/${ExtName}/${ExtVersion}/php_${ExtName}-${ExtVersion}-$($PhpVersion.Major).$($PhpVersion.Minor)-nts-vc15-x86.zip"
-    if (Get-ProcessorBits 64) {
-        $extensionUrl = "https://windows.php.net/downloads/pecl/releases/${ExtName}/${ExtVersion}/php_${ExtName}-${ExtVersion}-$($PhpVersion.Major).$($PhpVersion.Minor)-nts-vc15-x64.zip"
+    $arch = "x86"
+    $vc = "vc15"
+
+    if ($phpVer -ge [System.Version]"8.0") {
+        $vc = "vs16"
     }
+
+    if (Get-ProcessorBits 64) {
+        $arch = "x64"
+    }
+
+    $extensionUrl = "https://windows.php.net/downloads/pecl/releases/${ExtName}/${ExtVersion}/php_${ExtName}-${ExtVersion}-$($PhpVersion.Major).$($PhpVersion.Minor)-nts-${vc}-${arch}.zip"
 
     Write-Host "Download ${extensionUrl} to ${tmpFile}"
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
@@ -254,6 +270,7 @@ if (Install-NeededFor 'PHP' -DefaultAnswer $true) {
 
     Install-PHP -Version "7.3.29"
     Install-PHP -Version "7.4.22"
+    Install-PHP -Version "8.0.8"
 
     Write-Host "Installing composer..."
     choco install composer -y
