@@ -1,50 +1,58 @@
 function Install-NeededFor {
-param(
-    [string] $packageName = ''
-    ,[bool] $defaultAnswer = $true
-)
-    if ($packageName -eq '') {
-        return $false
-    }
+    param(
+        [String] $PackageName,
+        [Bool] $DefaultAnswer = $true
+    )
 
     $choices = New-Object Collections.ObjectModel.Collection[Management.Automation.Host.ChoiceDescription]
     $choices.Add((New-Object Management.Automation.Host.ChoiceDescription -ArgumentList '&Yes'))
     $choices.Add((New-Object Management.Automation.Host.ChoiceDescription -ArgumentList '&No'))
 
-    $question = "Do you need to install $($packageName)?"
-    $decision = $Host.UI.PromptForChoice("Install $packageName", $question, $choices, (1, 0)[$defaultAnswer])
+    $question = "Do you need to install ${PackageName}?"
+    $decision = $Host.UI.PromptForChoice("Install ${PackageName}", $question, $choices, (1, 0)[$DefaultAnswer])
 
     if ($decision -eq 0) {
-        Write-Host "Installing $packageName"
+        Write-Host "Installing ${PackageName}"
         return $true
     }
 
-    Write-Host "Not installing $packageName"
+    Write-Host "Not installing ${PackageName}"
     return $false
 }
 
-function Set-GitConfig($key, $defaultValue, $prompt) {
-    $value = git config --global $key | Out-String
+function Set-GitConfig {
+    param(
+        [String] $Key,
+        [AllowNull()]
+        [String] $DefaultValue,
+        [String] $Prompt
+    )
+
+    $value = git config --global $Key | Out-String
     $value = $value.Trim("`n", "`r", " ")
 
     while (!$value) {
-        if ($prompt) {
-            $value = Read-Host $prompt
+        if ($Prompt) {
+            $value = Read-Host $Prompt
         }
 
-        if (!$value -and $defaultValue) {
-            $value = $defaultValue
+        if (!$value -and $DefaultValue) {
+            $value = $DefaultValue
         }
     }
 
-    git config --global $key $value
+    git config --global $Key $value
 }
 
-function Install-PHP([string] $version) {
-    $phpVer = [System.Version]::new($version)
+function Install-PHP {
+    param(
+        [String] $Version
+    )
+
+    $phpVer = [System.Version]::new($Version)
     $installPath = Join-Path $env:ChocolateyToolsLocation "php$($phpVer.Major)$($phpVer.Minor)"
 
-    choco install php -my --version $version --params "/InstallDir:${installPath}"
+    choco install php -my --version $Version --params "/InstallDir:${installPath}"
 
     $phpIniFile = Join-Path $installPath 'php.ini'
 
@@ -122,12 +130,18 @@ function Install-PHP([string] $version) {
     Remove-Item $tmpFile
 }
 
-function Download-ExtensionFromPECL([string] $extName, [string] $extVersion, [System.Version] $phpVersion) {
+function Download-ExtensionFromPECL {
+    param(
+        [String] $ExtName,
+        [String] $ExtVersion,
+        [System.Version] $PhpVersion
+    )
+
     $tmpFile = New-TemporaryFile
 
-    $extensionUrl = "https://windows.php.net/downloads/pecl/releases/${extName}/${extVersion}/php_${extName}-${extVersion}-$($phpVersion.Major).$($phpVersion.Minor)-nts-vc15-x86.zip"
+    $extensionUrl = "https://windows.php.net/downloads/pecl/releases/${ExtName}/${ExtVersion}/php_${ExtName}-${ExtVersion}-$($PhpVersion.Major).$($PhpVersion.Minor)-nts-vc15-x86.zip"
     if (Get-ProcessorBits 64) {
-        $extensionUrl = "https://windows.php.net/downloads/pecl/releases/${extName}/${extVersion}/php_${extName}-${extVersion}-$($phpVersion.Major).$($phpVersion.Minor)-nts-vc15-x64.zip"
+        $extensionUrl = "https://windows.php.net/downloads/pecl/releases/${ExtName}/${ExtVersion}/php_${ExtName}-${ExtVersion}-$($PhpVersion.Major).$($PhpVersion.Minor)-nts-vc15-x64.zip"
     }
 
     Write-Host "Download ${extensionUrl} to ${tmpFile}"
@@ -137,37 +151,54 @@ function Download-ExtensionFromPECL([string] $extName, [string] $extVersion, [Sy
     return $tmpFile
 }
 
-function Install-PECLFromFile([string] $zipFile, [string] $extName, [string] $installPath, [string] $phpIniFile) {
+function Install-PECLFromFile {
+    param(
+        [String] $ArchiveFile,
+        [String] $ExtName,
+        [String] $InstallPath,
+        [String] $IniFile
+    )
+
     Add-Type -AssemblyName System.IO.Compression.FileSystem
 
-    $extensionFile = "php_${extName}.dll"
+    $extensionFile = "php_${ExtName}.dll"
 
-    $zip = [System.IO.Compression.ZipFile]::OpenRead($zipFile)
+    $zip = [System.IO.Compression.ZipFile]::OpenRead($ArchiveFile)
     $zip.Entries |
         Where-Object { $_.FullName -like $extensionFile } |
         ForEach-Object {
-            [System.IO.Compression.ZipFileExtensions]::ExtractToFile($_, "${installPath}\${extensionFile}", $true)
+            [System.IO.Compression.ZipFileExtensions]::ExtractToFile($_, "${InstallPath}\${extensionFile}", $true)
         }
     $zip.Dispose()
 
-    Add-LineToFile $phpIniFile  "extension=${extName}"
+    Add-LineToFile -Path $IniFile -Content "extension=${extName}"
 }
 
-function Test-ContentInFile([string] $path, [string] $content) {
-    if (!(Test-Path -LiteralPath $path)) {
+function Test-ContentInFile {
+    param(
+        [String] $Path,
+        [String] $Content
+    )
+
+    if (!(Test-Path -LiteralPath $Path)) {
         return $false
     }
 
-    $match = (@(Get-Content $path -ErrorAction SilentlyContinue) -match $content).Count -gt 0
+    $match = (@(Get-Content $Path -ErrorAction SilentlyContinue) -match $Content).Count -gt 0
     return $match
 }
 
-function Add-LineToFile([string] $path, [string] $content) {
-    if (Test-ContentInFile $path $content) {
+function Add-LineToFile {
+    param(
+        [String] $Path,
+        [String] $Content
+    )
+
+    if (Test-ContentInFile $Path $Content) {
         return
     }
 
-    Add-Content $path -Value $content
+    Add-Content -Path $Path -Value $Content
 }
 
 if (-not $env:ChocolateyInstall -or -not (Test-Path "$env:ChocolateyInstall")) {
@@ -190,8 +221,8 @@ Write-Host 'Configuring git...'
 
 Write-Host 'Set your user name and email address. This is important'
 Write-Host 'because every Git commit uses this information.'
-Set-GitConfig 'user.name' $null 'Please, enter your name'
-Set-GitConfig 'user.email' $null 'Please, enter your email'
+Set-GitConfig 'user.name' $null -Prompt 'Please, enter your name'
+Set-GitConfig 'user.email' $null -Prompt 'Please, enter your email'
 
 Set-GitConfig 'core.autocrlf' 'input'
 Set-GitConfig 'core.eol' 'lf'
@@ -215,30 +246,30 @@ if (!(Test-Path $gitIgnoreFile)) {
     Set-GitConfig 'core.excludesfile' $gitIgnoreFile
 }
 
-if (Install-NeededFor 'posh-git' $true) {
+if (Install-NeededFor 'posh-git' -DefaultAnswer $true) {
     PowerShellGet\Install-Module posh-git -Scope CurrentUser -AllowPrerelease -Force
     Add-PoshGitToProfile
 }
 
-if (Install-NeededFor 'KiTTy' $false) {
+if (Install-NeededFor 'KiTTy' -DefaultAnswer $false) {
     choco install kitty -y
 }
 
-if (Install-NeededFor 'PHP' $true) {
+if (Install-NeededFor 'PHP' -DefaultAnswer $true) {
     choco install sqlserver-odbcdriver -y
 
-    Install-PHP "7.3.25"
-    Install-PHP "7.4.13"
+    Install-PHP -Version "7.3.25"
+    Install-PHP -Version "7.4.13"
 
     Write-Host "Installing composer..."
     choco install composer -y
 }
 
-if (Install-NeededFor 'NodeJS' $true) {
+if (Install-NeededFor 'NodeJS' -DefaultAnswer $true) {
     choco install nodejs-lts -y
 }
 
-if (Install-NeededFor 'Python' $true) {
+if (Install-NeededFor 'Python' -DefaultAnswer $true) {
     $installPath = Join-Path $env:ChocolateyToolsLocation "python38"
 
     choco install python3 -y --version 3.8.6 --params "/InstallDir:${installPath}"
@@ -247,7 +278,7 @@ if (Install-NeededFor 'Python' $true) {
     pip install pipenv
 
     $profilePath = $PROFILE.CurrentUserCurrentHost
-    Write-Verbose "`$profilePath = '$profilePath'"
+    Write-Verbose "`$profilePath = '${profilePath}'"
 
     if (!(Test-ContentInFile $profilePath '\$env:PIPENV_VENV_IN_PROJECT=')) {
         Add-Content -LiteralPath $profilePath -Value "`n`$env:PIPENV_VENV_IN_PROJECT=1" -Encoding UTF8
