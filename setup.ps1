@@ -208,10 +208,6 @@ if (-not $env:ChocolateyInstall -or -not (Test-Path "$env:ChocolateyInstall")) {
 Import-Module "$env:ChocolateyInstall\helpers\chocolateyInstaller.psm1" -Force
 Get-ToolsLocation
 
-if (Install-NeededFor 'ConEmu' $false) {
-    choco install conemu -y
-}
-
 choco install openssh -y --pre -params '"/SSHAgentFeature"'
 choco install git -y --params="/GitAndUnixToolsOnPath /NoAutoCrlf"
 

@@ -4,7 +4,6 @@ Set up a web development environment on Windows.
 
 Included tools:
 
- - [ConEmu](https://chocolatey.org/packages/ConEmu)
  - [GIT](https://chocolatey.org/packages/git)
  - [posh-git](https://chocolatey.org/packages/poshgit)
  - [KiTTy](https://chocolatey.org/packages/kitty.portable)
