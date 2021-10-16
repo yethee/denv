@@ -98,7 +98,7 @@ function Install-PHP {
     if (Get-ProcessorBits 64) {
         $archPart = "-x86_64"
     }
-    $extensionUrl = "https://xdebug.org/files/php_xdebug-3.0.4-$($phpVer.Major).$($phpVer.Minor)-${vc}-nts${archPart}.dll"
+    $extensionUrl = "https://xdebug.org/files/php_xdebug-3.1.1-$($phpVer.Major).$($phpVer.Minor)-${vc}-nts${archPart}.dll"
 
     Write-Host "Download ${extensionUrl} to ${extensionFile}"
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
@@ -268,9 +268,9 @@ if (Install-NeededFor 'KiTTy' -DefaultAnswer $false) {
 if (Install-NeededFor 'PHP' -DefaultAnswer $true) {
     choco install sqlserver-odbcdriver -y
 
-    Install-PHP -Version "7.3.29"
-    Install-PHP -Version "7.4.22"
-    Install-PHP -Version "8.0.8"
+    Install-PHP -Version "7.3.31"
+    Install-PHP -Version "7.4.24"
+    Install-PHP -Version "8.0.11"
 
     Write-Host "Installing composer..."
     choco install composer -y
