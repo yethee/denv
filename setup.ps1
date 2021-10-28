@@ -148,7 +148,7 @@ function Download-ExtensionFromPECL {
     $arch = "x86"
     $vc = "vc15"
 
-    if ($phpVer -ge [System.Version]"8.0") {
+    if ($PhpVersion -ge [System.Version]"8.0") {
         $vc = "vs16"
     }
 
@@ -185,7 +185,7 @@ function Install-PECLFromFile {
         }
     $zip.Dispose()
 
-    Add-LineToFile -Path $IniFile -Content "extension=${extName}"
+    Add-LineToFile -Path $IniFile -Content "extension=${ExtName}"
 }
 
 function Test-ContentInFile {
