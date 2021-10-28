@@ -268,9 +268,9 @@ if (Install-NeededFor 'KiTTy' -DefaultAnswer $false) {
 if (Install-NeededFor 'PHP' -DefaultAnswer $true) {
     choco install sqlserver-odbcdriver -y
 
-    Install-PHP -Version "7.3.31"
-    Install-PHP -Version "7.4.24"
-    Install-PHP -Version "8.0.11"
+    Install-PHP -Version "7.3.30"
+    Install-PHP -Version "7.4.23"
+    Install-PHP -Version "8.0.10"
 
     Write-Host "Installing composer..."
     choco install composer -y
