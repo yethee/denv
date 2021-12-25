@@ -98,7 +98,7 @@ function Install-PHP {
     if (Get-ProcessorBits 64) {
         $archPart = "-x86_64"
     }
-    $extensionUrl = "https://xdebug.org/files/php_xdebug-3.1.1-$($phpVer.Major).$($phpVer.Minor)-${vc}-nts${archPart}.dll"
+    $extensionUrl = "https://xdebug.org/files/php_xdebug-3.1.2-$($phpVer.Major).$($phpVer.Minor)-${vc}-nts${archPart}.dll"
 
     Write-Host "Download ${extensionUrl} to ${extensionFile}"
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
@@ -108,7 +108,7 @@ function Install-PHP {
 
     # Install amqp extension
     if ($phpVer -lt [System.Version]"8.0") {
-        $tmpFile = Download-ExtensionFromPECL "amqp" "1.11.0beta" $phpVer
+        $tmpFile = Download-ExtensionFromPECL "amqp" "1.11.0" $phpVer
         Install-PECLFromFile $tmpFile "amqp" "${installPath}\ext" $phpIniFile
 
         $rmqLibFile = "rabbitmq.4.dll"
@@ -125,7 +125,7 @@ function Install-PHP {
 
     # Install ds extension
     if ($phpVer -lt [System.Version]"8.0") {
-        $tmpFile = Download-ExtensionFromPECL "ds" "1.3.0" $phpVer
+        $tmpFile = Download-ExtensionFromPECL "ds" "1.4.0" $phpVer
         Install-PECLFromFile $tmpFile "ds" "${installPath}\ext" $phpIniFile
         Remove-Item $tmpFile
     }
@@ -269,8 +269,8 @@ if (Install-NeededFor 'PHP' -DefaultAnswer $true) {
     choco install sqlserver-odbcdriver -y
 
     Install-PHP -Version "7.3.30"
-    Install-PHP -Version "7.4.23"
-    Install-PHP -Version "8.0.10"
+    Install-PHP -Version "7.4.27"
+    Install-PHP -Version "8.0.14"
 
     Write-Host "Installing composer..."
     choco install composer -y
