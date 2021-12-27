@@ -107,7 +107,7 @@ function Install-PHP {
     Add-LineToFile $phpIniFile 'zend_extension=xdebug'
 
     # Install amqp extension
-    if ($phpVer -lt [System.Version]"8.0") {
+    if ($phpVer -lt [System.Version]"8.2") {
         $tmpFile = Download-ExtensionFromPECL "amqp" "1.11.0" $phpVer
         Install-PECLFromFile $tmpFile "amqp" "${installPath}\ext" $phpIniFile
 
