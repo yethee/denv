@@ -262,7 +262,7 @@ if (Install-NeededFor 'posh-git' -DefaultAnswer $true) {
 }
 
 if (Install-NeededFor 'KiTTy' -DefaultAnswer $false) {
-    choco install kitty -y
+    choco install kitty --params "/Portable" -y
 }
 
 if (Install-NeededFor 'PHP' -DefaultAnswer $true) {
