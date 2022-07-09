@@ -216,13 +216,16 @@ function Add-LineToFile {
 }
 
 if (-not $env:ChocolateyInstall -or -not (Test-Path "$env:ChocolateyInstall")) {
-    iex ((new-object net.webclient).DownloadString('https://chocolatey.org/install.ps1'))
+    iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
 }
 
 Import-Module "$env:ChocolateyInstall\helpers\chocolateyInstaller.psm1" -Force
 Get-ToolsLocation
 
-choco install openssh -y --pre -params '"/SSHAgentFeature"'
+if (Install-NeededFor 'openssh' -DefaultAnswer $false) {
+    choco install openssh -y --pre -params '"/SSHAgentFeature"'
+}
+
 choco install git -y --params="/GitAndUnixToolsOnPath /NoAutoCrlf"
 
 Update-SessionEnvironment
