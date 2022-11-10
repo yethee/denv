@@ -98,7 +98,7 @@ function Install-PHP {
     if (Get-ProcessorBits 64) {
         $archPart = "-x86_64"
     }
-    $extensionUrl = "https://xdebug.org/files/php_xdebug-3.1.2-$($phpVer.Major).$($phpVer.Minor)-${vc}-nts${archPart}.dll"
+    $extensionUrl = "https://xdebug.org/files/php_xdebug-3.1.6-$($phpVer.Major).$($phpVer.Minor)-${vc}-nts${archPart}.dll"
 
     Write-Host "Download ${extensionUrl} to ${extensionFile}"
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
@@ -131,7 +131,8 @@ function Install-PHP {
     }
 
     # Install pdo_sqlsrv extension
-    $tmpFile = Download-ExtensionFromPECL "pdo_sqlsrv" "5.9.0" $phpVer
+    $extensionVersion = $phpVer -gt [System.Version]"7.3" ? "5.10.0" : "5.9.0"
+    $tmpFile = Download-ExtensionFromPECL "pdo_sqlsrv" $extensionVersion $phpVer
     Install-PECLFromFile $tmpFile "pdo_sqlsrv" "${installPath}\ext" $phpIniFile
     Remove-Item $tmpFile
 }
@@ -272,8 +273,9 @@ if (Install-NeededFor 'PHP' -DefaultAnswer $true) {
     choco install sqlserver-odbcdriver -y
 
     Install-PHP -Version "7.3.30"
-    Install-PHP -Version "7.4.27"
-    Install-PHP -Version "8.0.14"
+    Install-PHP -Version "7.4.33"
+    Install-PHP -Version "8.0.25"
+    Install-PHP -Version "8.1.12"
 
     Write-Host "Installing composer..."
     choco install composer -y
