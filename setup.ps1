@@ -90,15 +90,17 @@ function Install-PHP {
     # Install xdebug extension
 
     $extensionFile = (Join-Path $installPath 'ext\php_xdebug.dll')
-    $vc = "vc15"
     $archPart = ""
-    if ($phpVer -ge [System.Version]"8.0") {
-        $vc = "vs16"
-    }
+
     if (Get-ProcessorBits 64) {
         $archPart = "-x86_64"
     }
-    $extensionUrl = "https://xdebug.org/files/php_xdebug-3.1.6-$($phpVer.Major).$($phpVer.Minor)-${vc}-nts${archPart}.dll"
+
+    if ($phpVer -ge [System.Version]"8.0") {
+      $extensionUrl = "https://xdebug.org/files/php_xdebug-3.2.1-$($phpVer.Major).$($phpVer.Minor)-vs16-nts${archPart}.dll"
+    } else {
+      $extensionUrl = "https://xdebug.org/files/php_xdebug-3.1.6-$($phpVer.Major).$($phpVer.Minor)-vc15-nts${archPart}.dll"
+    }
 
     Write-Host "Download ${extensionUrl} to ${extensionFile}"
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
@@ -274,8 +276,8 @@ if (Install-NeededFor 'PHP' -DefaultAnswer $true) {
 
     Install-PHP -Version "7.3.30"
     Install-PHP -Version "7.4.33"
-    Install-PHP -Version "8.0.25"
-    Install-PHP -Version "8.1.12"
+    Install-PHP -Version "8.0.28"
+    Install-PHP -Version "8.1.17"
 
     Write-Host "Installing composer..."
     choco install composer -y
@@ -288,7 +290,7 @@ if (Install-NeededFor 'NodeJS' -DefaultAnswer $true) {
 if (Install-NeededFor 'Python' -DefaultAnswer $true) {
     $installPath = Join-Path $env:ChocolateyToolsLocation "python311"
 
-    choco install python3 -y --version 3.11.0 --params "/InstallDir:${installPath}"
+    choco install python3 -y --version 3.11.2 --params "/InstallDir:${installPath}"
     python -m pip install --upgrade pip
     Update-SessionEnvironment
     pip install pipenv
