@@ -97,9 +97,9 @@ function Install-PHP {
     }
 
     if ($phpVer -ge [System.Version]"8.0") {
-      $extensionUrl = "https://xdebug.org/files/php_xdebug-3.2.1-$($phpVer.Major).$($phpVer.Minor)-vs16-nts${archPart}.dll"
+        $extensionUrl = "https://xdebug.org/files/php_xdebug-3.3.1-$($phpVer.Major).$($phpVer.Minor)-vs16-nts${archPart}.dll"
     } else {
-      $extensionUrl = "https://xdebug.org/files/php_xdebug-3.1.6-$($phpVer.Major).$($phpVer.Minor)-vc15-nts${archPart}.dll"
+        $extensionUrl = "https://xdebug.org/files/php_xdebug-3.1.6-$($phpVer.Major).$($phpVer.Minor)-vc15-nts${archPart}.dll"
     }
 
     Write-Host "Download ${extensionUrl} to ${extensionFile}"
@@ -125,18 +125,13 @@ function Install-PHP {
         Remove-Item $tmpFile
     }
 
-    # Install ds extension
-    if ($phpVer -lt [System.Version]"8.0") {
-        $tmpFile = Download-ExtensionFromPECL "ds" "1.4.0" $phpVer
-        Install-PECLFromFile $tmpFile "ds" "${installPath}\ext" $phpIniFile
+    # Install pdo_sqlsrv extension
+    if ($phpVer -lt [System.Version]"8.2") {
+        $extensionVersion = $phpVer -ge [System.Version]"7.4" ? "5.10.0" : "5.9.0"
+        $tmpFile = Download-ExtensionFromPECL "pdo_sqlsrv" $extensionVersion $phpVer
+        Install-PECLFromFile $tmpFile "pdo_sqlsrv" "${installPath}\ext" $phpIniFile
         Remove-Item $tmpFile
     }
-
-    # Install pdo_sqlsrv extension
-    $extensionVersion = $phpVer -gt [System.Version]"7.3" ? "5.10.0" : "5.9.0"
-    $tmpFile = Download-ExtensionFromPECL "pdo_sqlsrv" $extensionVersion $phpVer
-    Install-PECLFromFile $tmpFile "pdo_sqlsrv" "${installPath}\ext" $phpIniFile
-    Remove-Item $tmpFile
 }
 
 function Download-ExtensionFromPECL {
@@ -276,8 +271,8 @@ if (Install-NeededFor 'PHP' -DefaultAnswer $true) {
 
     Install-PHP -Version "7.3.30"
     Install-PHP -Version "7.4.33"
-    Install-PHP -Version "8.0.28"
-    Install-PHP -Version "8.1.17"
+    Install-PHP -Version "8.1.27"
+    Install-PHP -Version "8.3.2"
 
     Write-Host "Installing composer..."
     choco install composer -y
