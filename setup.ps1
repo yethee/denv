@@ -52,7 +52,7 @@ function Install-PHP {
     $phpVer = [System.Version]::new($Version)
     $installPath = Join-Path $env:ChocolateyToolsLocation "php$($phpVer.Major)$($phpVer.Minor)"
 
-    choco install php -my --version $Version --params "/InstallDir:${installPath}"
+    choco install php -my --version $Version --force --params "/InstallDir:${installPath} /DontAddToPath"
 
     $phpIniFile = Join-Path $installPath 'php.ini'
 
@@ -97,7 +97,7 @@ function Install-PHP {
     }
 
     if ($phpVer -ge [System.Version]"8.0") {
-        $extensionUrl = "https://xdebug.org/files/php_xdebug-3.3.1-$($phpVer.Major).$($phpVer.Minor)-vs16-nts${archPart}.dll"
+        $extensionUrl = "https://xdebug.org/files/php_xdebug-3.3.2-$($phpVer.Major).$($phpVer.Minor)-vs16-nts${archPart}.dll"
     } else {
         $extensionUrl = "https://xdebug.org/files/php_xdebug-3.1.6-$($phpVer.Major).$($phpVer.Minor)-vc15-nts${archPart}.dll"
     }
@@ -109,8 +109,10 @@ function Install-PHP {
     Add-LineToFile $phpIniFile 'zend_extension=xdebug'
 
     # Install amqp extension
-    if ($phpVer -lt [System.Version]"8.2") {
-        $tmpFile = Download-ExtensionFromPECL "amqp" "1.11.0" $phpVer
+    if ($phpVer -lt [System.Version]"8.4") {
+        $extensionVersion = $phpVer -ge [System.Version]"8.0" ? "2.1.2" : "1.11.0"
+
+        $tmpFile = Download-ExtensionFromPECL "amqp" $extensionVersion $phpVer
         Install-PECLFromFile $tmpFile "amqp" "${installPath}\ext" $phpIniFile
 
         $rmqLibFile = "rabbitmq.4.dll"
@@ -128,8 +130,16 @@ function Install-PHP {
     # Install pdo_sqlsrv extension
     if ($phpVer -lt [System.Version]"8.2") {
         $extensionVersion = $phpVer -ge [System.Version]"7.4" ? "5.10.0" : "5.9.0"
+
         $tmpFile = Download-ExtensionFromPECL "pdo_sqlsrv" $extensionVersion $phpVer
         Install-PECLFromFile $tmpFile "pdo_sqlsrv" "${installPath}\ext" $phpIniFile
+        Remove-Item $tmpFile
+    }
+
+    # Install grpc extension
+    if ($phpVer -ge [System.Version]"8.1") {
+        $tmpFile = Download-ExtensionFromPECL "grpc" "1.64.1" $phpVer
+        Install-PECLFromFile $tmpFile "grpc" "${installPath}\ext" $phpIniFile
         Remove-Item $tmpFile
     }
 }
@@ -154,7 +164,7 @@ function Download-ExtensionFromPECL {
         $arch = "x64"
     }
 
-    $extensionUrl = "https://windows.php.net/downloads/pecl/releases/${ExtName}/${ExtVersion}/php_${ExtName}-${ExtVersion}-$($PhpVersion.Major).$($PhpVersion.Minor)-nts-${vc}-${arch}.zip"
+    $extensionUrl = "https://downloads.php.net/~windows/pecl/releases/${ExtName}/${ExtVersion}/php_${ExtName}-${ExtVersion}-$($PhpVersion.Major).$($PhpVersion.Minor)-nts-${vc}-${arch}.zip"
 
     Write-Host "Download ${extensionUrl} to ${tmpFile}"
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
@@ -271,8 +281,8 @@ if (Install-NeededFor 'PHP' -DefaultAnswer $true) {
 
     Install-PHP -Version "7.3.30"
     Install-PHP -Version "7.4.33"
-    Install-PHP -Version "8.1.27"
-    Install-PHP -Version "8.3.2"
+    Install-PHP -Version "8.1.29"
+    Install-PHP -Version "8.3.8"
 
     Write-Host "Installing composer..."
     choco install composer -y
