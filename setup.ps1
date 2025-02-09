@@ -52,7 +52,7 @@ function Install-PHP {
     $phpVer = [System.Version]::new($Version)
     $installPath = Join-Path $env:ChocolateyToolsLocation "php$($phpVer.Major)$($phpVer.Minor)"
 
-    choco install php -my --version $Version --force --params "/InstallDir:${installPath} /DontAddToPath"
+    choco install php --confirm --version $Version --force --params "/InstallDir:${installPath} /DontAddToPath"
 
     $phpIniFile = Join-Path $installPath 'php.ini'
 
@@ -93,13 +93,14 @@ function Install-PHP {
     $archPart = ""
 
     if (Get-ProcessorBits 64) {
-        $archPart = "-x86_64"
+        $archPart = "x86_64"
     }
 
     if ($phpVer -ge [System.Version]"8.0") {
-        $extensionUrl = "https://xdebug.org/files/php_xdebug-3.3.2-$($phpVer.Major).$($phpVer.Minor)-vs16-nts${archPart}.dll"
+        $vsVersion = $phpVer -ge [System.Version]"8.4" ? "vs17" : "vs16"
+        $extensionUrl = "https://xdebug.org/files/php_xdebug-3.4.1-$($phpVer.Major).$($phpVer.Minor)-nts-${vsVersion}-${archPart}.dll"
     } else {
-        $extensionUrl = "https://xdebug.org/files/php_xdebug-3.1.6-$($phpVer.Major).$($phpVer.Minor)-vc15-nts${archPart}.dll"
+        $extensionUrl = "https://xdebug.org/files/php_xdebug-3.1.6-$($phpVer.Major).$($phpVer.Minor)-vc15-nts-${archPart}.dll"
     }
 
     Write-Host "Download ${extensionUrl} to ${extensionFile}"
@@ -109,7 +110,7 @@ function Install-PHP {
     Add-LineToFile $phpIniFile 'zend_extension=xdebug'
 
     # Install amqp extension
-    if ($phpVer -lt [System.Version]"8.4") {
+    if ($phpVer -lt [System.Version]"8.5") {
         $extensionVersion = $phpVer -ge [System.Version]"8.0" ? "2.1.2" : "1.11.0"
 
         $tmpFile = Download-ExtensionFromPECL "amqp" $extensionVersion $phpVer
@@ -138,7 +139,7 @@ function Install-PHP {
 
     # Install grpc extension
     if ($phpVer -ge [System.Version]"8.1") {
-        $tmpFile = Download-ExtensionFromPECL "grpc" "1.64.1" $phpVer
+        $tmpFile = Download-ExtensionFromPECL "grpc" "1.70.0" $phpVer
         Install-PECLFromFile $tmpFile "grpc" "${installPath}\ext" $phpIniFile
         Remove-Item $tmpFile
     }
@@ -156,7 +157,9 @@ function Download-ExtensionFromPECL {
     $arch = "x86"
     $vc = "vc15"
 
-    if ($PhpVersion -ge [System.Version]"8.0") {
+    if ($PhpVersion -ge [System.Version]"8.4") {
+        $vc = "vs17"
+    } elseif ($PhpVersion -ge [System.Version]"8.0") {
         $vc = "vs16"
     }
 
@@ -281,8 +284,9 @@ if (Install-NeededFor 'PHP' -DefaultAnswer $true) {
 
     Install-PHP -Version "7.3.30"
     Install-PHP -Version "7.4.33"
-    Install-PHP -Version "8.1.29"
-    Install-PHP -Version "8.3.8"
+    Install-PHP -Version "8.1.31"
+    Install-PHP -Version "8.3.16"
+    Install-PHP -Version "8.4.3"
 
     Write-Host "Installing composer..."
     choco install composer -y
