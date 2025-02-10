@@ -78,6 +78,7 @@ function Install-PHP {
         ForEach-Object { $_ -replace ';(extension=sockets)', '$1' } |
         ForEach-Object { $_ -replace ';(extension=sodium)', '$1' } |
         ForEach-Object { $_ -replace ';(extension=xsl)', '$1' } |
+        ForEach-Object { $_ -replace ';(extension=zip)', '$1' } |
         Set-Content $phpIniFile
 
     # Setup curl
